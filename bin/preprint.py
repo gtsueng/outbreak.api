@@ -1,6 +1,8 @@
 import json
 import logging
 from pprint import pprint
+import pathlib
+import os
 
 import requests
 from elasticsearch import Elasticsearch
@@ -12,13 +14,21 @@ options.define('host', default="api.outbreak.info:9200")
 options.define('pattern', default="outbreak-resources-*")
 options.define('url', default="https://raw.githubusercontent.com/outbreak-info/outbreak_preprint_matcher/main/results/update%20dumps/update_file.json")
 
+scriptpath = pathlib.Path(__file__).parent.absolute()
+try:
+    generalpath = pathlib.Path(__file__).parents[2].absolute()
+except:
+    generalpath = pathlib.Path(__file__).resolve().parents[2].absolute()
+
+preprintpath = os.path.join(generalpath,'topic_classifier/results/update_file.json')
+
 def main():
     parse_command_line()
     try:
         client = Elasticsearch(options.host)
-        # with open("update_file_initial.json") as file:
-        #     updates = json.load(file)
-        updates = requests.get(options.url).json()
+        with open(preprintpath) as file:
+            updates = json.load(file)
+        #updates = requests.get(options.url).json()
 
         for update in updates:
             search = Search().using(client).query("match", _id=update['_id'])
